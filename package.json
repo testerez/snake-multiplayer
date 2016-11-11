@@ -1,0 +1,17 @@
+{
+  "name": "breacker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc -w -p . & sleep 3 && npm run serve",
+    "serve": "watch-http-server -o ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^2.0.3",
+    "watch-http-server": "^0.7.6"
+  }
+}
