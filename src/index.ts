@@ -184,6 +184,15 @@ function SnakeGame() {
           down: "ArrowDown",
         }
       ),
+      new Snake(
+        { x: w / 2, y: h / 2 },
+        {
+          left: "h",
+          up: "u",
+          right: "k",
+          down: "j",
+        }
+      ),
     ]
     food = [createFood(), createFood()]
     step = 100
