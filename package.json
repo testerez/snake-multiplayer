@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsc -w -p . & sleep 3 && cp index.html dist && npm run serve",
+    "start": "tsc -w -p . & sleep 3 && cp index.html dist && npm run serve dist",
     "serve": "watch-http-server -o .",
     "build": "tsc -p . && cp index.html dist",
     "deploy": "npm run build && gh-pages -d dist"
