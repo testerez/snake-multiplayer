@@ -26,7 +26,9 @@ class Snake {
 
   constructor(
     public pos: Point,
-    private controls: { left: string; up: string; right: string; down: string }
+    private controls: { left: string; up: string; right: string; down: string },
+    private color: string,
+    public lives: number = 0
   ) {
     // TODO: fix leak
     document.addEventListener("keydown", (e) => {
@@ -76,11 +78,14 @@ class Snake {
   }
 
   draw(ctx: CanvasRenderingContext2D) {
-    let color = 255
+    // let color = 255
+    // this.points.forEach((p) => {
+    //   const c = Math.round(color)
+    //   drawPoint(ctx, p, `rgb(${c},${c},${c})`)
+    //   color *= 0.999
+    // })
     this.points.forEach((p) => {
-      const c = Math.round(color)
-      drawPoint(ctx, p, `rgb(${c},${c},${c})`)
-      color *= 0.999
+      drawPoint(ctx, p, this.color)
     })
   }
 }
@@ -97,15 +102,14 @@ function SnakeGame() {
 
   function createFood() {
     // TODO: optimize
+    const allPoints = snakes.flatMap((s) => s.points)
     for (;;) {
       const f = {
         x: Math.floor(Math.random() * w),
         y: Math.floor(Math.random() * h),
       }
-      for (const snake of snakes) {
-        if (!snake.points.some((p) => pointsEq(p, f))) {
-          return f
-        }
+      if (!allPoints.some((p) => pointsEq(p, f))) {
+        return f
       }
     }
   }
@@ -146,12 +150,19 @@ function SnakeGame() {
       }
 
       // check if lost
+      const allPoints = [
+        ...snake.tail,
+        ...snakes.filter((sn) => sn !== snake).flatMap((s) => s.points),
+      ]
       if (
-        snake.tail.some((p) => pointsEq(p, snake.pos)) ||
+        allPoints.some((p) => pointsEq(p, snake.pos)) ||
         snake.pos.x !== (snake.pos.x + w) % w ||
         snake.pos.y !== (snake.pos.y + h) % h
       ) {
-        gameOver()
+        snake.lives--
+        if (snake.lives < 0) {
+          snakes = snakes.filter((sn) => sn !== snake)
+        }
       }
 
       // food
@@ -173,7 +184,8 @@ function SnakeGame() {
     snakes = [
       new Snake(
         { x: w / 4, y: h / 2 },
-        { left: "a", up: "w", right: "d", down: "s" }
+        { left: "a", up: "w", right: "d", down: "s" },
+        `rgb(255,0,0)`
       ),
       new Snake(
         { x: (w / 4) * 3, y: h / 2 },
@@ -182,19 +194,29 @@ function SnakeGame() {
           up: "ArrowUp",
           right: "ArrowRight",
           down: "ArrowDown",
-        }
+        },
+        `rgb(255,255,0)`,
+        20
       ),
-      new Snake(
-        { x: w / 2, y: h / 2 },
-        {
-          left: "h",
-          up: "u",
-          right: "k",
-          down: "j",
-        }
-      ),
+      // new Snake(
+      //   { x: w / 2, y: h / 2 },
+      //   {
+      //     left: "f",
+      //     up: "t",
+      //     right: "h",
+      //     down: "g",
+      //   },
+      //   `rgb(0,255,0)`
+      // ),
     ]
-    food = [createFood(), createFood()]
+    food = [
+      createFood(),
+      createFood(),
+      createFood(),
+      createFood(),
+      createFood(),
+      createFood(),
+    ]
     step = 100
     running = true
   }
@@ -202,9 +224,7 @@ function SnakeGame() {
   function draw() {
     ctx.fillStyle = "#000"
     ctx.fillRect(0, 0, w, h)
-    for (const snake of snakes) {
-      snake.draw(ctx)
-    }
+    snakes.forEach((snake) => snake.draw(ctx))
     food.forEach((f) => drawPoint(ctx, f, "#09f"))
   }
 }

@@ -13,10 +13,10 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "typescript": "^2.0.3",
+    "typescript": "^4.8.4",
     "watch-http-server": "^0.7.6"
   },
   "dependencies": {
-    "gh-pages": "^0.12.0"
+    "gh-pages": "^4.0.0"
   }
 }
