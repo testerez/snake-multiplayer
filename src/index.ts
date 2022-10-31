@@ -28,7 +28,7 @@ class Snake {
     public pos: Point,
     private controls: { left: string; up: string; right: string; down: string },
     private color: string,
-    public lives: number = 0
+    public shrinkSise: number = 1
   ) {
     // TODO: fix leak
     document.addEventListener("keydown", (e) => {
@@ -159,8 +159,8 @@ function SnakeGame() {
         snake.pos.x !== (snake.pos.x + w) % w ||
         snake.pos.y !== (snake.pos.y + h) % h
       ) {
-        snake.lives--
-        if (snake.lives < 0) {
+        snake.size -= snake.shrinkSise
+        if (snake.size < 1) {
           snakes = snakes.filter((sn) => sn !== snake)
         }
       }
@@ -185,7 +185,19 @@ function SnakeGame() {
       new Snake(
         { x: w / 4, y: h / 2 },
         { left: "a", up: "w", right: "d", down: "s" },
-        `rgb(255,0,0)`
+        `rgb(255,0,0)`,
+        20
+      ),
+      new Snake(
+        { x: w / 2, y: h / 2 },
+        {
+          left: "f",
+          up: "t",
+          right: "h",
+          down: "g",
+        },
+        `rgb(0,255,0)`,
+        20
       ),
       new Snake(
         { x: (w / 4) * 3, y: h / 2 },
@@ -196,18 +208,8 @@ function SnakeGame() {
           down: "ArrowDown",
         },
         `rgb(255,255,0)`,
-        20
+        5
       ),
-      // new Snake(
-      //   { x: w / 2, y: h / 2 },
-      //   {
-      //     left: "f",
-      //     up: "t",
-      //     right: "h",
-      //     down: "g",
-      //   },
-      //   `rgb(0,255,0)`
-      // ),
     ]
     food = [
       createFood(),
