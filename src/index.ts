@@ -27,7 +27,7 @@ class Snake {
   constructor(
     public pos: Point,
     private controls: { left: string; up: string; right: string; down: string },
-    private color: string,
+    private color: [r: number, v: number, b: number],
     public shrinkSise: number = 1
   ) {
     // TODO: fix leak
@@ -78,16 +78,20 @@ class Snake {
   }
 
   draw(ctx: CanvasRenderingContext2D) {
-    // let color = 255
-    // this.points.forEach((p) => {
-    //   const c = Math.round(color)
-    //   drawPoint(ctx, p, `rgb(${c},${c},${c})`)
-    //   color *= 0.999
-    // })
-    this.points.forEach((p) => {
-      drawPoint(ctx, p, this.color)
+    this.points.forEach((p, i) => {
+      const alpha = 0.5 + (1 - i / this.points.length) * 0.5
+      console.log(`rgba(${this.color.map((n) => `${n}`).join()}, ${alpha})`)
+      drawPoint(
+        ctx,
+        p,
+        `rgba(${this.color.map((n) => `${n}`).join()}, ${alpha}`
+      )
     })
   }
+}
+
+class Food {
+  constructor(public pos: Point, public size: number, public color: string) {}
 }
 
 function SnakeGame() {
@@ -95,21 +99,24 @@ function SnakeGame() {
   const w = 40
   const h = 30
   let snakes: Snake[]
-  let food: Point[] = []
+  let food: Food[] = []
   let running = false
   let step: number //ms
   let enablePortal = true
 
   function createFood() {
     // TODO: optimize
+    // TODO: no food on other food
     const allPoints = snakes.flatMap((s) => s.points)
     for (;;) {
-      const f = {
+      const pos = {
         x: Math.floor(Math.random() * w),
         y: Math.floor(Math.random() * h),
       }
-      if (!allPoints.some((p) => pointsEq(p, f))) {
-        return f
+      if (!allPoints.some((p) => pointsEq(p, pos))) {
+        return Math.random() < 0.1
+          ? new Food(pos, 12, "#ff0")
+          : new Food(pos, 3, "#09f")
       }
     }
   }
@@ -166,11 +173,11 @@ function SnakeGame() {
       }
 
       // food
-      const eaten = food.filter((f) => pointsEq(snake.pos, f))
+      const eaten = food.filter((f) => pointsEq(snake.pos, f.pos))
       eaten.forEach((f) => {
         delete food[food.indexOf(f)]
         food.push(createFood())
-        snake.size += 3
+        snake.size += f.size
         step = step * 0.999 // Speed-up game
       })
     }
@@ -185,7 +192,7 @@ function SnakeGame() {
       new Snake(
         { x: w / 4, y: h / 2 },
         { left: "a", up: "w", right: "d", down: "s" },
-        `rgb(255,0,0)`,
+        [255, 0, 0],
         20
       ),
       new Snake(
@@ -196,7 +203,7 @@ function SnakeGame() {
           right: "h",
           down: "g",
         },
-        `rgb(0,255,0)`,
+        [0, 255, 0],
         20
       ),
       new Snake(
@@ -207,7 +214,7 @@ function SnakeGame() {
           right: "ArrowRight",
           down: "ArrowDown",
         },
-        `rgb(255,255,0)`,
+        [255, 125, 0],
         5
       ),
     ]
@@ -227,7 +234,7 @@ function SnakeGame() {
     ctx.fillStyle = "#000"
     ctx.fillRect(0, 0, w, h)
     snakes.forEach((snake) => snake.draw(ctx))
-    food.forEach((f) => drawPoint(ctx, f, "#09f"))
+    food.forEach((f) => drawPoint(ctx, f.pos, f.color))
   }
 }
 
