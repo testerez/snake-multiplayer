@@ -1,7 +1,7 @@
 // TODO
 // - add sounds
-// - fix heads colision (once one snake is dead, it can't kill the other)
 
+const enablePortal = true
 interface Point {
   x: number
   y: number
@@ -34,7 +34,7 @@ class Snake {
     public pos: Point,
     private controls: { left: string; up: string; right: string; down: string },
     private color: [r: number, v: number, b: number],
-    public shrinkSise: number = 1
+    public shrinkSize: number = 1
   ) {
     // TODO: fix leak
     document.addEventListener("keydown", (e) => {
@@ -65,7 +65,7 @@ class Snake {
     })
   }
 
-  move() {
+  move(w: number, h: number) {
     if (!this.dir) {
       return
     }
@@ -80,6 +80,12 @@ class Snake {
     this.pos = {
       x: this.pos.x + dir.x,
       y: this.pos.y + dir.y,
+    }
+
+    // portal
+    if (enablePortal) {
+      this.pos.x = (this.pos.x + w) % w
+      this.pos.y = (this.pos.y + h) % h
     }
   }
 
@@ -108,7 +114,6 @@ function SnakeGame() {
   let food: Food[] = []
   let running = false
   let step: number //ms
-  let enablePortal = true
   let frame = 0
   let endFrame = 0
 
@@ -169,29 +174,23 @@ function SnakeGame() {
     if (frame % 20 === 0) {
       snakes.forEach((s) => s.size--)
     }
+    // move snakes
+    snakes.forEach((s) => s.move(w, h))
+
+    // check colisions
     for (const snake of snakes) {
-      snake.move()
-
-      // portal
-      if (enablePortal) {
-        snake.pos.x = (snake.pos.x + w) % w
-        snake.pos.y = (snake.pos.y + h) % h
-      }
-
-      // check if lost
       const allPoints = [
         ...snake.tail,
         ...snakes.filter((sn) => sn !== snake).flatMap((s) => s.points),
       ]
       if (
+        // colisions with tail or other shakes
         allPoints.some((p) => pointsEq(p, snake.pos)) ||
+        // collision with walls
         snake.pos.x !== (snake.pos.x + w) % w ||
         snake.pos.y !== (snake.pos.y + h) % h
       ) {
-        snake.size -= snake.shrinkSise
-      }
-      if (snake.size < 0) {
-        snakes = snakes.filter((sn) => sn !== snake)
+        snake.size -= snake.shrinkSize
       }
 
       // food
@@ -203,6 +202,9 @@ function SnakeGame() {
         step = step * 0.985 // Speed-up game
       })
     }
+
+    // Remove dead snakes
+    snakes = snakes.filter((sn) => sn.size >= 0)
 
     // Poison
     if (frame % 500 === 0) {
