@@ -1,3 +1,7 @@
+// TODO
+// - add sounds
+// - fix heads colision (once one snake is dead, it can't kill the other)
+
 interface Point {
   x: number
   y: number
@@ -7,7 +11,9 @@ function pointsEq(a: Point, b: Point) {
   return a.x == b.x && a.y == b.y
 }
 
-function drawPoint(ctx: CanvasRenderingContext2D, p: Point, color = "#fff") {
+function drawPoint(ctx: CanvasRenderingContext2D, p: Point, color: string) {
+  ctx.shadowColor = color
+  ctx.shadowBlur = 20
   ctx.fillStyle = color
   ctx.fillRect(p.x, p.y, 1, 1)
 }
@@ -32,7 +38,7 @@ class Snake {
   ) {
     // TODO: fix leak
     document.addEventListener("keydown", (e) => {
-      const k = e.key
+      const k = e.key.toLocaleLowerCase()
       let x = 0,
         y = 0
       if (k === this.controls.left) {
@@ -79,8 +85,8 @@ class Snake {
 
   draw(ctx: CanvasRenderingContext2D) {
     this.points.forEach((p, i) => {
-      const alpha = 0.5 + (1 - i / this.points.length) * 0.5
-      console.log(`rgba(${this.color.map((n) => `${n}`).join()}, ${alpha})`)
+      const minAlpha = 0.4
+      const alpha = minAlpha + (1 - i / this.points.length) * (1 - minAlpha)
       drawPoint(
         ctx,
         p,
@@ -103,8 +109,14 @@ function SnakeGame() {
   let running = false
   let step: number //ms
   let enablePortal = true
+  let frame = 0
+  let endFrame = 0
 
-  function createFood() {
+  function createRandomFood() {
+    return Math.random() < 0.1 ? createFood(20, "#ff0") : createFood(3, "#09f")
+  }
+
+  function createFood(size: number, color: string) {
     // TODO: optimize
     // TODO: no food on other food
     const allPoints = snakes.flatMap((s) => s.points)
@@ -114,9 +126,7 @@ function SnakeGame() {
         y: Math.floor(Math.random() * h),
       }
       if (!allPoints.some((p) => pointsEq(p, pos))) {
-        return Math.random() < 0.1
-          ? new Food(pos, 12, "#ff0")
-          : new Food(pos, 3, "#09f")
+        return new Food(pos, size, color)
       }
     }
   }
@@ -147,6 +157,18 @@ function SnakeGame() {
     if (!running) {
       return
     }
+
+    frame++
+
+    if (endFrame) {
+      if (frame >= endFrame) {
+        newGame()
+      }
+      return
+    }
+    if (frame % 20 === 0) {
+      snakes.forEach((s) => s.size--)
+    }
     for (const snake of snakes) {
       snake.move()
 
@@ -167,24 +189,29 @@ function SnakeGame() {
         snake.pos.y !== (snake.pos.y + h) % h
       ) {
         snake.size -= snake.shrinkSise
-        if (snake.size < 1) {
-          snakes = snakes.filter((sn) => sn !== snake)
-        }
+      }
+      if (snake.size < 0) {
+        snakes = snakes.filter((sn) => sn !== snake)
       }
 
       // food
       const eaten = food.filter((f) => pointsEq(snake.pos, f.pos))
       eaten.forEach((f) => {
         delete food[food.indexOf(f)]
-        food.push(createFood())
+        food.push(createRandomFood())
         snake.size += f.size
-        step = step * 0.999 // Speed-up game
+        step = step * 0.985 // Speed-up game
       })
     }
-  }
 
-  function gameOver() {
-    newGame()
+    // Poison
+    if (frame % 500 === 0) {
+      ;[...Array(9)].forEach(() => food.push(createFood(-9, "#c0f")))
+    }
+
+    if (snakes.length <= 1 && !endFrame) {
+      endFrame = frame + 20
+    }
   }
 
   function newGame() {
@@ -198,10 +225,10 @@ function SnakeGame() {
       new Snake(
         { x: w / 2, y: h / 2 },
         {
-          left: "f",
-          up: "t",
-          right: "h",
-          down: "g",
+          left: "g",
+          up: "y",
+          right: "j",
+          down: "h",
         },
         [0, 255, 0],
         20
@@ -209,25 +236,20 @@ function SnakeGame() {
       new Snake(
         { x: (w / 4) * 3, y: h / 2 },
         {
-          left: "ArrowLeft",
-          up: "ArrowUp",
-          right: "ArrowRight",
-          down: "ArrowDown",
+          left: "arrowleft",
+          up: "arrowup",
+          right: "arrowright",
+          down: "arrowdown",
         },
         [255, 125, 0],
-        5
+        20
       ),
     ]
-    food = [
-      createFood(),
-      createFood(),
-      createFood(),
-      createFood(),
-      createFood(),
-      createFood(),
-    ]
+    food = [...Array(8)].map(createRandomFood)
     step = 100
+    frame = 0
     running = true
+    endFrame = 0
   }
 
   function draw() {
