@@ -2,6 +2,9 @@
 // - add sounds
 
 const enablePortal = true
+const w = 40
+const h = 30
+
 interface Point {
   x: number
   y: number
@@ -65,7 +68,7 @@ class Snake {
     })
   }
 
-  move(w: number, h: number) {
+  move() {
     if (!this.dir) {
       return
     }
@@ -108,8 +111,6 @@ class Food {
 
 function SnakeGame() {
   const scale = 15
-  const w = 40
-  const h = 30
   let snakes: Snake[]
   let food: Food[] = []
   let running = false
@@ -175,7 +176,7 @@ function SnakeGame() {
       snakes.forEach((s) => s.size--)
     }
     // move snakes
-    snakes.forEach((s) => s.move(w, h))
+    snakes.forEach((s) => s.move())
 
     // check colisions
     for (const snake of snakes) {
@@ -199,7 +200,6 @@ function SnakeGame() {
         delete food[food.indexOf(f)]
         food.push(createRandomFood())
         snake.size += f.size
-        step = step * 0.985 // Speed-up game
       })
     }
 
@@ -211,6 +211,12 @@ function SnakeGame() {
       ;[...Array(9)].forEach(() => food.push(createFood(-9, "#c0f")))
     }
 
+    // Speed-up game
+    if (frame % 100 === 0) {
+      step = step * 0.98
+    }
+
+    // Game is over when only one or no snake survives
     if (snakes.length <= 1 && !endFrame) {
       endFrame = frame + 20
     }
@@ -252,6 +258,7 @@ function SnakeGame() {
     frame = 0
     running = true
     endFrame = 0
+    score = 0
   }
 
   function draw() {
