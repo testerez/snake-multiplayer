@@ -21,6 +21,54 @@ function drawPoint(ctx: CanvasRenderingContext2D, p: Point, color: string) {
   ctx.fillRect(p.x, p.y, 1, 1)
 }
 
+const playerCount =
+  Number(new URLSearchParams(location.search).get("players")) || 2
+
+/** Return a key mapped to different keyboard layouts */
+const mapKey = async (key: string) => {
+  const keyboard = (navigator as any).keyboard
+  if (!keyboard) return key
+  const map = await keyboard.getLayoutMap()
+  return map.get(`Key${key.toUpperCase()}`) || key
+}
+
+const getPlayers = async () => {
+  const arrowControls = {
+    left: "arrowleft",
+    up: "arrowup",
+    right: "arrowright",
+    down: "arrowdown",
+  }
+  if (playerCount === 1) {
+    return [new Snake({ x: w / 2, y: h / 2 }, arrowControls, [0, 255, 0], 20)]
+  }
+  return [
+    new Snake(
+      { x: w / 4, y: h / 2 },
+      {
+        left: await mapKey("a"),
+        up: await mapKey("w"),
+        right: await mapKey("d"),
+        down: await mapKey("s"),
+      },
+      [255, 0, 0],
+      20
+    ),
+    new Snake({ x: (w / 4) * 3, y: h / 2 }, arrowControls, [255, 125, 0], 20),
+    new Snake(
+      { x: w / 2, y: h / 2 },
+      {
+        left: await mapKey("g"),
+        up: await mapKey("y"),
+        right: await mapKey("j"),
+        down: await mapKey("h"),
+      },
+      [0, 255, 0],
+      20
+    ),
+  ].slice(0, playerCount)
+}
+
 class Snake {
   dir: { x: number; y: number } | null
   // Cache the next direction so if dirrection is
@@ -111,7 +159,7 @@ class Food {
 
 function SnakeGame() {
   const scale = 15
-  let snakes: Snake[]
+  let snakes: Snake[] = []
   let food: Food[] = []
   let running = false
   let step: number //ms
@@ -119,7 +167,7 @@ function SnakeGame() {
   let endFrame = 0
 
   function createRandomFood() {
-    return Math.random() < 0.1 ? createFood(20, "#ff0") : createFood(3, "#09f")
+    return Math.random() < 0.1 ? createFood(20, "#ff0") : createFood(3, "#09fb")
   }
 
   function createFood(size: number, color: string) {
@@ -222,37 +270,9 @@ function SnakeGame() {
     }
   }
 
-  function newGame() {
-    snakes = [
-      new Snake(
-        { x: w / 4, y: h / 2 },
-        { left: "a", up: "w", right: "d", down: "s" },
-        [255, 0, 0],
-        20
-      ),
-      new Snake(
-        { x: w / 2, y: h / 2 },
-        {
-          left: "g",
-          up: "y",
-          right: "j",
-          down: "h",
-        },
-        [0, 255, 0],
-        20
-      ),
-      new Snake(
-        { x: (w / 4) * 3, y: h / 2 },
-        {
-          left: "arrowleft",
-          up: "arrowup",
-          right: "arrowright",
-          down: "arrowdown",
-        },
-        [255, 125, 0],
-        20
-      ),
-    ]
+  async function newGame() {
+    running = false
+    snakes = await getPlayers()
     food = [...Array(8)].map(createRandomFood)
     step = 100
     frame = 0

@@ -1,4 +1,4 @@
-[Demo](https://testerez.github.io/snake/)
+[Demo](https://testerez.github.io/snake-multiplayer/)
 
 Setup: `npm i && npm start`
 
