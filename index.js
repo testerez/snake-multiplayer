@@ -1,3 +1,12 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 // TODO
 // - add sounds
 const enablePortal = true;
@@ -12,6 +21,41 @@ function drawPoint(ctx, p, color) {
     ctx.fillStyle = color;
     ctx.fillRect(p.x, p.y, 1, 1);
 }
+const playerCount = Number(new URLSearchParams(location.search).get("players")) || 2;
+/** Return a key mapped to different keyboard layouts */
+const mapKey = (key) => __awaiter(this, void 0, void 0, function* () {
+    const keyboard = navigator.keyboard;
+    if (!keyboard)
+        return key;
+    const map = yield keyboard.getLayoutMap();
+    return map.get(`Key${key.toUpperCase()}`) || key;
+});
+const getPlayers = () => __awaiter(this, void 0, void 0, function* () {
+    const arrowControls = {
+        left: "arrowleft",
+        up: "arrowup",
+        right: "arrowright",
+        down: "arrowdown",
+    };
+    if (playerCount === 1) {
+        return [new Snake({ x: w / 2, y: h / 2 }, arrowControls, [0, 255, 0], 20)];
+    }
+    return [
+        new Snake({ x: w / 4, y: h / 2 }, {
+            left: yield mapKey("a"),
+            up: yield mapKey("w"),
+            right: yield mapKey("d"),
+            down: yield mapKey("s"),
+        }, [255, 0, 0], 20),
+        new Snake({ x: w / 2, y: h / 2 }, {
+            left: yield mapKey("g"),
+            up: yield mapKey("y"),
+            right: yield mapKey("j"),
+            down: yield mapKey("h"),
+        }, [0, 255, 0], 20),
+        new Snake({ x: (w / 4) * 3, y: h / 2 }, arrowControls, [255, 125, 0], 20),
+    ].slice(0, playerCount);
+});
 class Snake {
     constructor(pos, controls, color, shrinkSize = 1) {
         this.pos = pos;
@@ -187,26 +231,15 @@ function SnakeGame() {
         }
     }
     function newGame() {
-        snakes = [
-            new Snake({ x: w / 4, y: h / 2 }, { left: "a", up: "w", right: "d", down: "s" }, [255, 0, 0], 20),
-            new Snake({ x: w / 2, y: h / 2 }, {
-                left: "g",
-                up: "y",
-                right: "j",
-                down: "h",
-            }, [0, 255, 0], 20),
-            new Snake({ x: (w / 4) * 3, y: h / 2 }, {
-                left: "arrowleft",
-                up: "arrowup",
-                right: "arrowright",
-                down: "arrowdown",
-            }, [255, 125, 0], 20),
-        ];
-        food = [...Array(8)].map(createRandomFood);
-        step = 100;
-        frame = 0;
-        running = true;
-        endFrame = 0;
+        return __awaiter(this, void 0, void 0, function* () {
+            running = false;
+            snakes = yield getPlayers();
+            food = [...Array(8)].map(createRandomFood);
+            step = 100;
+            frame = 0;
+            running = true;
+            endFrame = 0;
+        });
     }
     function draw() {
         ctx.fillStyle = "#000";
