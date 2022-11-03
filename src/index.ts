@@ -258,7 +258,6 @@ function SnakeGame() {
     frame = 0
     running = true
     endFrame = 0
-    score = 0
   }
 
   function draw() {
