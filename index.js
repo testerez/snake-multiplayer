@@ -47,13 +47,13 @@ const getPlayers = () => __awaiter(this, void 0, void 0, function* () {
             right: yield mapKey("d"),
             down: yield mapKey("s"),
         }, [255, 0, 0], 20),
+        new Snake({ x: (w / 4) * 3, y: h / 2 }, arrowControls, [255, 125, 0], 20),
         new Snake({ x: w / 2, y: h / 2 }, {
             left: yield mapKey("g"),
             up: yield mapKey("y"),
             right: yield mapKey("j"),
             down: yield mapKey("h"),
         }, [0, 255, 0], 20),
-        new Snake({ x: (w / 4) * 3, y: h / 2 }, arrowControls, [255, 125, 0], 20),
     ].slice(0, playerCount);
 });
 class Snake {
@@ -134,14 +134,14 @@ class Food {
 }
 function SnakeGame() {
     const scale = 15;
-    let snakes;
+    let snakes = [];
     let food = [];
     let running = false;
     let step; //ms
     let frame = 0;
     let endFrame = 0;
     function createRandomFood() {
-        return Math.random() < 0.1 ? createFood(20, "#ff0") : createFood(3, "#09f");
+        return Math.random() < 0.1 ? createFood(20, "#ff0") : createFood(3, "#09fb");
     }
     function createFood(size, color) {
         // TODO: optimize
@@ -226,7 +226,7 @@ function SnakeGame() {
             step = step * 0.98;
         }
         // Game is over when only one or no snake survives
-        if (snakes.length <= 1 && !endFrame) {
+        if (snakes.length <= (playerCount === 1 ? 0 : 1) && !endFrame) {
             endFrame = frame + 20;
         }
     }
