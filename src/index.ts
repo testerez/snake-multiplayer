@@ -265,7 +265,7 @@ function SnakeGame() {
     }
 
     // Game is over when only one or no snake survives
-    if (snakes.length <= 1 && !endFrame) {
+    if (snakes.length <= (playerCount === 1 ? 0 : 1) && !endFrame) {
       endFrame = frame + 20
     }
   }
