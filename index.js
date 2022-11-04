@@ -210,7 +210,9 @@ function SnakeGame() {
             const eaten = food.filter((f) => pointsEq(snake.pos, f.pos));
             eaten.forEach((f) => {
                 delete food[food.indexOf(f)];
-                food.push(createRandomFood());
+                // re-create food if it was not a poison
+                if (f.size > 0)
+                    food.push(createRandomFood());
                 snake.size += f.size;
             });
         }
